@@ -1,0 +1,41 @@
+package com.github.delenius;
+
+import java_cup.runtime.*;
+
+parser code {:
+    @Override
+    public void syntax_error(Symbol s){
+        System.out.println("Syntax error at line " + s.left
+            + " column " + s.right);
+    }
+
+    protected Integer result;
+
+    public static Integer getResult(java.io.Reader reader) throws Exception {
+        SymbolFactory sf = new ComplexSymbolFactory();
+        CalcScanner scanner = new CalcScanner(reader,sf);
+        CalcParser parser = new CalcParser(scanner,sf);
+        parser.parse();
+        return parser.result;
+    }
+:}
+
+terminal SEMI, PLUS, TIMES, LPAREN, RPAREN;
+terminal Integer NUMBER;
+
+non terminal top;
+non terminal Integer expr;
+
+precedence left PLUS;
+precedence left TIMES;
+
+top       ::= expr:e {: result = e; :};
+expr      ::= NUMBER:n
+            {: RESULT=n; :}
+          | expr:l PLUS expr:r
+            {: RESULT=new Integer(l.intValue() + r.intValue()); :}
+          | expr:l TIMES expr:r
+            {: RESULT=new Integer(l.intValue() * r.intValue()); :}
+          | LPAREN expr:e RPAREN
+            {: RESULT=e; :}
+          ;
